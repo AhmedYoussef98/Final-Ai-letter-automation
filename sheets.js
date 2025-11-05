@@ -283,12 +283,12 @@ class VirtualLetterRenderer {
             <td>${letter.id}</td>
             <td>${letter.date}</td>
             <td>${translateLetterType(letter.type)}</td>
-            <td><span class="status-badge ${reviewStatusClass}">${letter.reviewStatus}</span></td>
-            <td><span class="status-badge ${sendStatusClass}">${letter.sendStatus}</span></td>
+            <td><span class="status-badge ${reviewStatusClass}">${displayStatusLabel(letter.reviewStatus)}</span></td>
+            <td><span class="status-badge ${sendStatusClass}">${displayStatusLabel(letter.sendStatus)}</span></td>
             <td>${letter.recipient}</td>
             <td>${letter.subject}</td>
             <td>${letter.reviewerName || "-"}</td>
-            <td>${letter.reviewNotes || "-"}</td>
+            <td class="comment-cell">${renderCommentCell(letter.reviewNotes, letter.id)}</td>
             <td>${letter.writer || "-"}</td>
             <td>
                 <div class="action-buttons">
@@ -388,12 +388,12 @@ function renderLettersTableOptimized(allLetters) {
             <td>${letter.id}</td>
             <td>${letter.date}</td>
             <td>${translateLetterType(letter.type)}</td>
-            <td><span class="status-badge ${reviewStatusClass}">${letter.reviewStatus}</span></td>
-            <td><span class="status-badge ${sendStatusClass}">${letter.sendStatus}</span></td>
+            <td><span class="status-badge ${reviewStatusClass}">${displayStatusLabel(letter.reviewStatus)}</span></td>
+            <td><span class="status-badge ${sendStatusClass}">${displayStatusLabel(letter.sendStatus)}</span></td>
             <td>${letter.recipient}</td>
             <td>${letter.subject}</td>
             <td>${letter.reviewerName || "-"}</td>
-            <td>${letter.reviewNotes || "-"}</td>
+            <td class="comment-cell">${renderCommentCell(letter.reviewNotes, letter.id)}</td>
             <td>${letter.writer || "-"}</td>
             <td>
                 <div class="action-buttons">
@@ -722,30 +722,66 @@ async function loadSubmissionsData(forceRefresh = false) {
 }
 
 async function updateReviewStatusInSheet(letterId, status, reviewerName, notes, letterContent) {
-    try {
-        const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                action: 'updateReviewStatus',
-                letterId: letterId,
-                status: status,
-                reviewerName: reviewerName,
-                notes: notes,
-                letterContent: letterContent
-            })
-        });
+    const updateTimestamp = new Date().toISOString();
+    let retryCount = 0;
+    const maxRetries = 3;
 
-        // Invalidate cache after update
-        letterCache.invalidate();
-        
-        console.log('Request to update review status sent to Apps Script.');
-    } catch (error) {
-        console.error('Error sending update review status request to Apps Script:', error);
-        throw error;
+    console.log('📡 updateReviewStatusInSheet called');
+    console.log('Parameters being sent to Google Sheets:');
+    console.log('  - letterId:', letterId);
+    console.log('  - status:', status);
+    console.log('  - reviewerName:', reviewerName);
+    console.log('  - notes:', notes ? `${notes.length} chars` : 'empty');
+    console.log('  - letterContent:', letterContent ? `${letterContent.length} chars` : 'empty');
+
+    while (retryCount < maxRetries) {
+        try {
+            console.log(`📤 Attempt ${retryCount + 1}/${maxRetries} - Sending request to Apps Script...`);
+
+            const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'updateReviewStatus',
+                    letterId: letterId,
+                    status: status,
+                    reviewerName: reviewerName,
+                    notes: notes,
+                    letterContent: letterContent,
+                    timestamp: updateTimestamp
+                })
+            });
+
+            console.log('✅ Request sent successfully (no-cors mode)');
+
+            // Invalidate cache after update
+            letterCache.invalidate();
+            console.log('🗑️ Cache invalidated');
+
+            // Wait a moment for Google Sheets to update
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            console.log('✅ Status update request completed successfully');
+            return true;
+
+        } catch (error) {
+            retryCount++;
+            console.error(`❌ Attempt ${retryCount} failed:`, error);
+
+            if (retryCount >= maxRetries) {
+                console.error('❌ All retry attempts exhausted');
+                console.error('Error details:', error);
+                throw error;
+            }
+
+            // Wait before retrying (exponential backoff)
+            const waitTime = Math.pow(2, retryCount) * 1000;
+            console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
     }
 }
 
@@ -783,6 +819,112 @@ function getStatusClass(status) {
         'تم الإرسال': 'status-ready'
     };
     return statusMap[status] || 'status-waiting';
+}
+
+// Display label for status (UI only - backend keeps original values)
+function displayStatusLabel(status) {
+    if (status === 'مرفوض') {
+        return 'طلب ملغى';
+    }
+    return status;
+}
+
+// Truncate comment to specified length
+function truncateComment(text, maxLength = 50) {
+    if (!text || text === "-" || text.trim() === "") {
+        return "-";
+    }
+
+    if (text.length <= maxLength) {
+        return text;
+    }
+
+    return text.substring(0, maxLength) + "...";
+}
+
+// Render comment cell with read more functionality
+function renderCommentCell(comment, letterId) {
+    if (!comment || comment === "-" || comment.trim() === "") {
+        return "-";
+    }
+
+    const maxLength = 50;
+
+    if (comment.length <= maxLength) {
+        return comment;
+    }
+
+    const truncated = truncateComment(comment, maxLength);
+    return `
+        <span class="comment-text">${truncated}</span>
+        <button class="read-more-btn" onclick="showFullComment('${letterId}', event)" title="اقرأ المزيد">
+            <i class="fas fa-expand-alt"></i>
+        </button>
+    `;
+}
+
+// Show full comment in modal
+function showFullComment(letterId, event) {
+    event.stopPropagation();
+
+    // Find the letter data
+    const letters = JSON.parse(localStorage.getItem('cachedLetters') || '[]');
+    const letter = letters.find(l => l.id === letterId);
+
+    if (!letter || !letter.reviewNotes) {
+        return;
+    }
+
+    // Create or get modal
+    let modal = document.getElementById('commentModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'commentModal';
+        modal.className = 'comment-modal';
+        modal.innerHTML = `
+            <div class="comment-modal-content">
+                <div class="comment-modal-header">
+                    <h3>الملاحظات الكاملة</h3>
+                    <button class="comment-modal-close" onclick="closeCommentModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="comment-modal-body">
+                    <p id="fullCommentText"></p>
+                </div>
+                <div class="comment-modal-footer">
+                    <strong>رقم الخطاب:</strong> ${letterId}<br>
+                    <strong>المراجع:</strong> ${letter.reviewerName || 'غير محدد'}
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    }
+
+    // Update modal content
+    document.getElementById('fullCommentText').textContent = letter.reviewNotes;
+    modal.querySelector('.comment-modal-footer').innerHTML = `
+        <strong>رقم الخطاب:</strong> ${letterId}<br>
+        <strong>المراجع:</strong> ${letter.reviewerName || 'غير محدد'}
+    `;
+
+    // Show modal
+    modal.style.display = 'flex';
+
+    // Add click outside to close
+    modal.onclick = function(e) {
+        if (e.target === modal) {
+            closeCommentModal();
+        }
+    };
+}
+
+// Close comment modal
+function closeCommentModal() {
+    const modal = document.getElementById('commentModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 function translateLetterType(type) {

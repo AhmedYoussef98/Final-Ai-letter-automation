@@ -221,7 +221,7 @@ module.exports = async (req, res) => {
                 console.log("Parsed files:", Object.keys(files));
 
                 // Updated to use new API endpoint
-                const targetUrl = `${API_BASE_URL}/api/v1/archive/letter`;
+                const targetUrl = `${API_BASE_URL}/api/v1/archive/letter/docx`;
                 const formData = new FormData();
 
                 // Append fields - Handle both single values and arrays properly
@@ -343,7 +343,7 @@ module.exports = async (req, res) => {
                     targetUrl = `${API_BASE_URL}/api/v1/chat/cleanup`;
                     break;
                 case "archive-letter":
-                    targetUrl = `${API_BASE_URL}/api/v1/archive/letter`; // Updated endpoint
+                    targetUrl = `${API_BASE_URL}/api/v1/archive/letter/docx`; // Updated endpoint
                     break;
                 case "update-archive":
                     targetUrl = `${API_BASE_URL}/api/v1/archive/update`; // For Updating the already archived letters
