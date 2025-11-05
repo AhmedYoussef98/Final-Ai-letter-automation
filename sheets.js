@@ -246,25 +246,25 @@ class VirtualLetterRenderer {
     
     render() {
         if (!this.container) return;
-        
+
         const visibleLetters = this.filteredLetters.slice(this.startIndex, this.endIndex);
-        
+
         // Clear container
         this.container.innerHTML = '';
-        
+
         // Create virtual spacer for items above
         if (this.startIndex > 0) {
             const topSpacer = document.createElement('div');
             topSpacer.style.height = `${this.startIndex * this.itemHeight}px`;
             this.container.appendChild(topSpacer);
         }
-        
+
         // Render visible items
         visibleLetters.forEach(letter => {
             const row = this.createLetterRow(letter);
             this.container.appendChild(row);
         });
-        
+
         // Create virtual spacer for items below
         const remainingItems = this.filteredLetters.length - this.endIndex;
         if (remainingItems > 0) {
@@ -272,6 +272,9 @@ class VirtualLetterRenderer {
             bottomSpacer.style.height = `${remainingItems * this.itemHeight}px`;
             this.container.appendChild(bottomSpacer);
         }
+
+        // Initialize comment buttons after rendering
+        initializeCommentButtons();
     }
     
     createLetterRow(letter) {
@@ -419,9 +422,12 @@ function renderLettersTableOptimized(allLetters) {
     
     // Update pagination info
     updatePaginationInfo(allLetters.length);
-    
+
     console.timeEnd('renderLettersTable');
-    
+
+    // Initialize comment buttons after rendering
+    initializeCommentButtons();
+
     // Handle highlighting
     if (highlightId) {
         setTimeout(() => {
@@ -855,29 +861,34 @@ function renderCommentCell(comment, letterId) {
     }
 
     const truncated = truncateComment(comment, maxLength);
+    // Use data attribute instead of inline onclick for better reliability
     return `
         <span class="comment-text">${truncated}</span>
-        <button class="read-more-btn" onclick="showFullComment('${letterId}', event)" title="اقرأ المزيد">
+        <button class="read-more-btn" data-letter-id="${letterId}" title="اقرأ المزيد">
             <i class="fas fa-expand-alt"></i>
         </button>
     `;
 }
 
 // Show full comment in modal
-function showFullComment(letterId, event) {
-    event.stopPropagation();
+function showFullComment(letterId) {
+    console.log('📖 Opening comment modal for letter:', letterId);
 
     // Find the letter data
     const letters = JSON.parse(localStorage.getItem('cachedLetters') || '[]');
     const letter = letters.find(l => l.id === letterId);
 
     if (!letter || !letter.reviewNotes) {
+        console.warn('⚠️ No review notes found for letter:', letterId);
         return;
     }
+
+    console.log('✅ Found letter with notes:', letter.reviewNotes.substring(0, 50) + '...');
 
     // Create or get modal
     let modal = document.getElementById('commentModal');
     if (!modal) {
+        console.log('🔨 Creating new modal');
         modal = document.createElement('div');
         modal.id = 'commentModal';
         modal.className = 'comment-modal';
@@ -885,7 +896,7 @@ function showFullComment(letterId, event) {
             <div class="comment-modal-content">
                 <div class="comment-modal-header">
                     <h3>الملاحظات الكاملة</h3>
-                    <button class="comment-modal-close" onclick="closeCommentModal()">
+                    <button class="comment-modal-close">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
@@ -893,37 +904,69 @@ function showFullComment(letterId, event) {
                     <p id="fullCommentText"></p>
                 </div>
                 <div class="comment-modal-footer">
-                    <strong>رقم الخطاب:</strong> ${letterId}<br>
-                    <strong>المراجع:</strong> ${letter.reviewerName || 'غير محدد'}
+                    <strong>رقم الخطاب:</strong> <span id="modalLetterId"></span><br>
+                    <strong>المراجع:</strong> <span id="modalReviewerName"></span>
                 </div>
             </div>
         `;
         document.body.appendChild(modal);
+
+        // Add close button listener
+        modal.querySelector('.comment-modal-close').addEventListener('click', closeCommentModal);
+
+        // Add click outside to close
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeCommentModal();
+            }
+        });
     }
 
     // Update modal content
     document.getElementById('fullCommentText').textContent = letter.reviewNotes;
-    modal.querySelector('.comment-modal-footer').innerHTML = `
-        <strong>رقم الخطاب:</strong> ${letterId}<br>
-        <strong>المراجع:</strong> ${letter.reviewerName || 'غير محدد'}
-    `;
+    document.getElementById('modalLetterId').textContent = letterId;
+    document.getElementById('modalReviewerName').textContent = letter.reviewerName || 'غير محدد';
 
     // Show modal
     modal.style.display = 'flex';
-
-    // Add click outside to close
-    modal.onclick = function(e) {
-        if (e.target === modal) {
-            closeCommentModal();
-        }
-    };
+    console.log('✅ Modal displayed');
 }
 
 // Close comment modal
 function closeCommentModal() {
+    console.log('❌ Closing modal');
     const modal = document.getElementById('commentModal');
     if (modal) {
         modal.style.display = 'none';
+    }
+}
+
+// Initialize comment button event listeners using event delegation
+function initializeCommentButtons() {
+    console.log('🔧 Initializing comment button listeners');
+
+    // Remove existing listener if any
+    document.removeEventListener('click', handleCommentButtonClick);
+
+    // Add event delegation for read-more buttons
+    document.addEventListener('click', handleCommentButtonClick);
+}
+
+// Handle comment button clicks
+function handleCommentButtonClick(e) {
+    const button = e.target.closest('.read-more-btn');
+    if (button) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const letterId = button.getAttribute('data-letter-id');
+        console.log('🔘 Read more button clicked for letter:', letterId);
+
+        if (letterId) {
+            showFullComment(letterId);
+        } else {
+            console.error('❌ No letter ID found on button');
+        }
     }
 }
 
