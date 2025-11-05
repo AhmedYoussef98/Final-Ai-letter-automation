@@ -487,9 +487,12 @@ function filterAndRenderLetters(allLetters) {
         return matchesSearch && matchesType && matchesReview;
     });
     
-    // Apply sorting
+    // Apply sorting (default to newest first if no sort selected)
     if (selectedSort) {
         filtered = sortLetters(filtered, selectedSort);
+    } else {
+        // Default sorting: newest to oldest
+        filtered = sortLetters(filtered, 'date-new-old');
     }
     
     // Reset pagination for filtered results
@@ -1040,10 +1043,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             const recipientTitleSelect = document.getElementById('recipientTitle');
             if (recipientTitleSelect) {
                 settings.recipientTitles.forEach(title => {
-                    const option = document.createElement('option');
-                    option.value = title;
-                    option.textContent = title;
-                    recipientTitleSelect.appendChild(option);
+                    // Replace 'سعادة' with gender-specific options
+                    if (title === 'سعادة') {
+                        // Add male option
+                        const maleOption = document.createElement('option');
+                        maleOption.value = 'سعادة - ذكر';
+                        maleOption.textContent = 'سعادة - ذكر';
+                        recipientTitleSelect.appendChild(maleOption);
+
+                        // Add female option
+                        const femaleOption = document.createElement('option');
+                        femaleOption.value = 'سعادة - أنثى';
+                        femaleOption.textContent = 'سعادة - أنثى';
+                        recipientTitleSelect.appendChild(femaleOption);
+                    } else {
+                        // Keep other titles as-is
+                        const option = document.createElement('option');
+                        option.value = title;
+                        option.textContent = title;
+                        recipientTitleSelect.appendChild(option);
+                    }
                 });
                 const otherOption = document.createElement('option');
                 otherOption.value = 'أخرى';

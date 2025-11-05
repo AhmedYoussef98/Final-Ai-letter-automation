@@ -84,6 +84,7 @@
 
                     <div class="form-group" id="previousLetterGroup" style="display: none;">
                         <label for="previousLetter">الخطاب السابق <span class="required">*</span></label>
+                        <input type="text" id="previousLetterSearch" placeholder="ابحث عن الخطاب بالعنوان أو المستلم..." style="margin-bottom: 10px; width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                         <select id="previousLetter" name="previous_letter_id">
                             <option value="">اختر الخطاب السابق</option>
                         </select>
@@ -91,6 +92,7 @@
 
                     <div class="form-group" id="receivedLetterGroup" style="display: none;">
                         <label for="receivedLetter">الخطاب المستلم <span class="required">*</span></label>
+                        <input type="text" id="receivedLetterSearch" placeholder="ابحث عن الخطاب..." style="margin-bottom: 10px; width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
                         <select id="receivedLetter" name="received_letter_id">
                             <option value="">اختر الخطاب المستلم</option>
                         </select>
@@ -298,6 +300,17 @@
                     receivedLetterSelect.value = "";
                 }
             });
+
+            // Add event listeners for search inputs (real-time filtering)
+            const previousLetterSearch = document.getElementById('previousLetterSearch');
+            if (previousLetterSearch) {
+                previousLetterSearch.addEventListener('input', filterPreviousLetters);
+            }
+
+            const receivedLetterSearch = document.getElementById('receivedLetterSearch');
+            if (receivedLetterSearch) {
+                receivedLetterSearch.addEventListener('input', filterReceivedLetters);
+            }
             
             // Handle template selection for edit functionality
             const templateRadios = document.querySelectorAll('input[name="template"]');
@@ -691,9 +704,9 @@
             try {
                 const letters = await loadSubmissionsData();
                 const previousLetterSelect = document.getElementById("previousLetter");
-                
+
                 previousLetterSelect.innerHTML = '<option value="">اختر الخطاب السابق</option>';
-                
+
                 letters.forEach(letter => {
                     const option = document.createElement("option");
                     option.value = letter.id;
@@ -701,6 +714,10 @@
                     option.dataset.content = letter.content || '';
                     previousLetterSelect.appendChild(option);
                 });
+
+                // Clear search input when loading new data
+                const searchInput = document.getElementById('previousLetterSearch');
+                if (searchInput) searchInput.value = '';
             } catch (error) {
                 console.error('Error loading previous letters:', error);
             }
@@ -711,9 +728,9 @@
             try {
                 const letters = await loadReceivedData();
                 const receivedLetterSelect = document.getElementById("receivedLetter");
-                
+
                 receivedLetterSelect.innerHTML = '<option value="">اختر الخطاب المستلم</option>';
-                
+
                 letters.forEach(letter => {
                     const option = document.createElement("option");
                     option.value = letter.id;
@@ -721,9 +738,55 @@
                     option.dataset.content = letter.content || '';
                     receivedLetterSelect.appendChild(option);
                 });
+
+                // Clear search input when loading new data
+                const searchInput = document.getElementById('receivedLetterSearch');
+                if (searchInput) searchInput.value = '';
             } catch (error) {
                 console.error('Error loading received letters:', error);
             }
+        }
+
+        // Filter function for previous letters (searches title and recipient)
+        function filterPreviousLetters() {
+            const searchTerm = document.getElementById('previousLetterSearch').value.toLowerCase();
+            const select = document.getElementById('previousLetter');
+            const options = select.querySelectorAll('option');
+
+            options.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = 'block'; // Always show default option
+                    return;
+                }
+
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+        }
+
+        // Filter function for received letters
+        function filterReceivedLetters() {
+            const searchTerm = document.getElementById('receivedLetterSearch').value.toLowerCase();
+            const select = document.getElementById('receivedLetter');
+            const options = select.querySelectorAll('option');
+
+            options.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = 'block'; // Always show default option
+                    return;
+                }
+
+                const text = option.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    option.style.display = 'block';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
         }
 
         // Cleanup session when user leaves the page
