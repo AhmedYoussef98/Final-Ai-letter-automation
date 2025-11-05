@@ -1043,27 +1043,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             const recipientTitleSelect = document.getElementById('recipientTitle');
             if (recipientTitleSelect) {
                 settings.recipientTitles.forEach(title => {
-                    // Replace 'سعادة' with gender-specific options
-                    if (title === 'سعادة') {
-                        // Add male option
-                        const maleOption = document.createElement('option');
-                        maleOption.value = 'سعادة - ذكر';
-                        maleOption.textContent = 'سعادة - ذكر';
-                        recipientTitleSelect.appendChild(maleOption);
-
-                        // Add female option
-                        const femaleOption = document.createElement('option');
-                        femaleOption.value = 'سعادة - أنثى';
-                        femaleOption.textContent = 'سعادة - أنثى';
-                        recipientTitleSelect.appendChild(femaleOption);
-                    } else {
-                        // Keep other titles as-is
+                    // Keep 'السادة' as-is (no gender variants)
+                    if (title === 'السادة') {
                         const option = document.createElement('option');
                         option.value = title;
                         option.textContent = title;
                         recipientTitleSelect.appendChild(option);
                     }
+                    // Skip 'أخرى' here (we add it at the end)
+                    else if (title === 'أخرى') {
+                        return;
+                    }
+                    // For all other titles, add gender-specific options
+                    else {
+                        // Add male option
+                        const maleOption = document.createElement('option');
+                        maleOption.value = `${title} - ذكر`;
+                        maleOption.textContent = `${title} - ذكر`;
+                        recipientTitleSelect.appendChild(maleOption);
+
+                        // Add female option
+                        const femaleOption = document.createElement('option');
+                        femaleOption.value = `${title} - أنثى`;
+                        femaleOption.textContent = `${title} - أنثى`;
+                        recipientTitleSelect.appendChild(femaleOption);
+                    }
                 });
+                // Add 'أخرى' option at the end
                 const otherOption = document.createElement('option');
                 otherOption.value = 'أخرى';
                 otherOption.textContent = 'أخرى';
