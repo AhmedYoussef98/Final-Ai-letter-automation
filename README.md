@@ -105,3 +105,4 @@ The implementation has been tested locally and successfully displays:
 
 This update significantly enhances the user experience by providing a professional, document-like preview that matches the quality expected from formal letter generation systems.
 
+Deployment refresh
