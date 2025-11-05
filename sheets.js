@@ -272,9 +272,6 @@ class VirtualLetterRenderer {
             bottomSpacer.style.height = `${remainingItems * this.itemHeight}px`;
             this.container.appendChild(bottomSpacer);
         }
-
-        // Initialize comment buttons after rendering
-        initializeCommentButtons();
     }
     
     createLetterRow(letter) {
@@ -288,11 +285,11 @@ class VirtualLetterRenderer {
             <td>${translateLetterType(letter.type)}</td>
             <td><span class="status-badge ${reviewStatusClass}">${displayStatusLabel(letter.reviewStatus)}</span></td>
             <td><span class="status-badge ${sendStatusClass}">${displayStatusLabel(letter.sendStatus)}</span></td>
-            <td>${letter.recipient}</td>
-            <td>${letter.subject}</td>
-            <td>${letter.reviewerName || "-"}</td>
-            <td class="comment-cell">${renderCommentCell(letter.reviewNotes, letter.id)}</td>
-            <td>${letter.writer || "-"}</td>
+            <td title="${letter.recipient || ''}">${truncateText(letter.recipient)}</td>
+            <td title="${letter.subject || ''}">${truncateText(letter.subject)}</td>
+            <td title="${letter.reviewerName || ''}">${truncateText(letter.reviewerName)}</td>
+            <td title="${letter.reviewNotes || ''}">${truncateText(letter.reviewNotes)}</td>
+            <td title="${letter.writer || ''}">${truncateText(letter.writer)}</td>
             <td>
                 <div class="action-buttons">
                     <button class="action-icon" onclick="reviewLetter('${letter.id}')" title="مراجعة">
@@ -393,11 +390,11 @@ function renderLettersTableOptimized(allLetters) {
             <td>${translateLetterType(letter.type)}</td>
             <td><span class="status-badge ${reviewStatusClass}">${displayStatusLabel(letter.reviewStatus)}</span></td>
             <td><span class="status-badge ${sendStatusClass}">${displayStatusLabel(letter.sendStatus)}</span></td>
-            <td>${letter.recipient}</td>
-            <td>${letter.subject}</td>
-            <td>${letter.reviewerName || "-"}</td>
-            <td class="comment-cell">${renderCommentCell(letter.reviewNotes, letter.id)}</td>
-            <td>${letter.writer || "-"}</td>
+            <td title="${letter.recipient || ''}">${truncateText(letter.recipient)}</td>
+            <td title="${letter.subject || ''}">${truncateText(letter.subject)}</td>
+            <td title="${letter.reviewerName || ''}">${truncateText(letter.reviewerName)}</td>
+            <td title="${letter.reviewNotes || ''}">${truncateText(letter.reviewNotes)}</td>
+            <td title="${letter.writer || ''}">${truncateText(letter.writer)}</td>
             <td>
                 <div class="action-buttons">
                     <button class="action-icon" onclick="reviewLetter('${letter.id}')" title="مراجعة">
@@ -424,9 +421,6 @@ function renderLettersTableOptimized(allLetters) {
     updatePaginationInfo(allLetters.length);
 
     console.timeEnd('renderLettersTable');
-
-    // Initialize comment buttons after rendering
-    initializeCommentButtons();
 
     // Handle highlighting
     if (highlightId) {
@@ -835,8 +829,8 @@ function displayStatusLabel(status) {
     return status;
 }
 
-// Truncate comment to specified length
-function truncateComment(text, maxLength = 50) {
+// Truncate text to specified length (default 50 characters)
+function truncateText(text, maxLength = 50) {
     if (!text || text === "-" || text.trim() === "") {
         return "-";
     }
@@ -846,128 +840,6 @@ function truncateComment(text, maxLength = 50) {
     }
 
     return text.substring(0, maxLength) + "...";
-}
-
-// Render comment cell with read more functionality
-function renderCommentCell(comment, letterId) {
-    if (!comment || comment === "-" || comment.trim() === "") {
-        return "-";
-    }
-
-    const maxLength = 50;
-
-    if (comment.length <= maxLength) {
-        return comment;
-    }
-
-    const truncated = truncateComment(comment, maxLength);
-    // Use data attribute instead of inline onclick for better reliability
-    return `
-        <span class="comment-text">${truncated}</span>
-        <button class="read-more-btn" data-letter-id="${letterId}" title="اقرأ المزيد">
-            <i class="fas fa-expand-alt"></i>
-        </button>
-    `;
-}
-
-// Show full comment in modal
-function showFullComment(letterId) {
-    console.log('📖 Opening comment modal for letter:', letterId);
-
-    // Find the letter data
-    const letters = JSON.parse(localStorage.getItem('cachedLetters') || '[]');
-    const letter = letters.find(l => l.id === letterId);
-
-    if (!letter || !letter.reviewNotes) {
-        console.warn('⚠️ No review notes found for letter:', letterId);
-        return;
-    }
-
-    console.log('✅ Found letter with notes:', letter.reviewNotes.substring(0, 50) + '...');
-
-    // Create or get modal
-    let modal = document.getElementById('commentModal');
-    if (!modal) {
-        console.log('🔨 Creating new modal');
-        modal = document.createElement('div');
-        modal.id = 'commentModal';
-        modal.className = 'comment-modal';
-        modal.innerHTML = `
-            <div class="comment-modal-content">
-                <div class="comment-modal-header">
-                    <h3>الملاحظات الكاملة</h3>
-                    <button class="comment-modal-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="comment-modal-body">
-                    <p id="fullCommentText"></p>
-                </div>
-                <div class="comment-modal-footer">
-                    <strong>رقم الخطاب:</strong> <span id="modalLetterId"></span><br>
-                    <strong>المراجع:</strong> <span id="modalReviewerName"></span>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-
-        // Add close button listener
-        modal.querySelector('.comment-modal-close').addEventListener('click', closeCommentModal);
-
-        // Add click outside to close
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) {
-                closeCommentModal();
-            }
-        });
-    }
-
-    // Update modal content
-    document.getElementById('fullCommentText').textContent = letter.reviewNotes;
-    document.getElementById('modalLetterId').textContent = letterId;
-    document.getElementById('modalReviewerName').textContent = letter.reviewerName || 'غير محدد';
-
-    // Show modal
-    modal.style.display = 'flex';
-    console.log('✅ Modal displayed');
-}
-
-// Close comment modal
-function closeCommentModal() {
-    console.log('❌ Closing modal');
-    const modal = document.getElementById('commentModal');
-    if (modal) {
-        modal.style.display = 'none';
-    }
-}
-
-// Initialize comment button event listeners using event delegation
-function initializeCommentButtons() {
-    console.log('🔧 Initializing comment button listeners');
-
-    // Remove existing listener if any
-    document.removeEventListener('click', handleCommentButtonClick);
-
-    // Add event delegation for read-more buttons
-    document.addEventListener('click', handleCommentButtonClick);
-}
-
-// Handle comment button clicks
-function handleCommentButtonClick(e) {
-    const button = e.target.closest('.read-more-btn');
-    if (button) {
-        e.preventDefault();
-        e.stopPropagation();
-
-        const letterId = button.getAttribute('data-letter-id');
-        console.log('🔘 Read more button clicked for letter:', letterId);
-
-        if (letterId) {
-            showFullComment(letterId);
-        } else {
-            console.error('❌ No letter ID found on button');
-        }
-    }
 }
 
 function translateLetterType(type) {
