@@ -271,6 +271,23 @@ function handleFormDataRequest(e) {
                 }
                 break;
 
+            case 'updateWhatsAppStatus':
+                try {
+                    const letterIdWhatsApp = e.parameter.letterId;
+                    const whatsappStatus = e.parameter.whatsappStatus;
+                    const managerName = e.parameter.managerName;
+                    const managerPhone = e.parameter.managerPhone;
+
+                    updateWhatsAppStatusInSheet(letterIdWhatsApp, whatsappStatus, managerName, managerPhone);
+
+                    response.success = true;
+                    response.message = 'WhatsApp status updated successfully.';
+                } catch (whatsappError) {
+                    Logger.log('Update WhatsApp status error: ' + whatsappError.toString());
+                    response.message = 'WhatsApp update error: ' + whatsappError.toString();
+                }
+                break;
+
             default:
                 response.message = 'Invalid action received: ' + action;
                 break;
@@ -809,6 +826,42 @@ function updateReviewStatusInSheet(letterId, status, reviewerName, notes, letter
         sheet.getRange(targetRow, 7).setValue(letterContent);
         Logger.log('Updated letter content for ID: ' + letterId);
     }
+
+    SpreadsheetApp.flush();
+    return true;
+}
+
+/**
+ * Updates WhatsApp status in the sheet.
+ */
+function updateWhatsAppStatusInSheet(letterId, whatsappStatus, managerName, managerPhone) {
+    const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Submissions');
+
+    if (!sheet) {
+        throw new Error('Submissions sheet not found in spreadsheet.');
+    }
+
+    const data = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+
+    for (let i = 1; i < data.length; i++) {
+        if (data[i][0] == letterId) {
+            rowIndex = i;
+            break;
+        }
+    }
+
+    if (rowIndex === -1) {
+        throw new Error('Letter with ID ' + letterId + ' not found.');
+    }
+
+    const targetRow = rowIndex + 1;
+
+    // Update WhatsApp status (column P - index 16)
+    sheet.getRange(targetRow, 16).setValue(whatsappStatus);
+
+    Logger.log('Updated WhatsApp status for letter ID: ' + letterId + ' to: ' + whatsappStatus);
+    Logger.log('Manager: ' + managerName + ' (' + managerPhone + ')');
 
     SpreadsheetApp.flush();
     return true;
