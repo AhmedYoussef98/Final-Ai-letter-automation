@@ -246,25 +246,25 @@ class VirtualLetterRenderer {
     
     render() {
         if (!this.container) return;
-        
+
         const visibleLetters = this.filteredLetters.slice(this.startIndex, this.endIndex);
-        
+
         // Clear container
         this.container.innerHTML = '';
-        
+
         // Create virtual spacer for items above
         if (this.startIndex > 0) {
             const topSpacer = document.createElement('div');
             topSpacer.style.height = `${this.startIndex * this.itemHeight}px`;
             this.container.appendChild(topSpacer);
         }
-        
+
         // Render visible items
         visibleLetters.forEach(letter => {
             const row = this.createLetterRow(letter);
             this.container.appendChild(row);
         });
-        
+
         // Create virtual spacer for items below
         const remainingItems = this.filteredLetters.length - this.endIndex;
         if (remainingItems > 0) {
@@ -283,13 +283,13 @@ class VirtualLetterRenderer {
             <td>${letter.id}</td>
             <td>${letter.date}</td>
             <td>${translateLetterType(letter.type)}</td>
-            <td><span class="status-badge ${reviewStatusClass}">${letter.reviewStatus}</span></td>
-            <td><span class="status-badge ${sendStatusClass}">${letter.sendStatus}</span></td>
-            <td>${letter.recipient}</td>
-            <td>${letter.subject}</td>
-            <td>${letter.reviewerName || "-"}</td>
-            <td>${letter.reviewNotes || "-"}</td>
-            <td>${letter.writer || "-"}</td>
+            <td><span class="status-badge ${reviewStatusClass}">${displayStatusLabel(letter.reviewStatus)}</span></td>
+            <td><span class="status-badge ${sendStatusClass}">${displayStatusLabel(letter.sendStatus)}</span></td>
+            <td title="${letter.recipient || ''}">${truncateText(letter.recipient)}</td>
+            <td title="${letter.subject || ''}">${truncateText(letter.subject)}</td>
+            <td title="${letter.reviewerName || ''}">${truncateText(letter.reviewerName)}</td>
+            <td title="${letter.reviewNotes || ''}">${truncateText(letter.reviewNotes)}</td>
+            <td title="${letter.writer || ''}">${truncateText(letter.writer)}</td>
             <td>
                 <div class="action-buttons">
                     <button class="action-icon" onclick="reviewLetter('${letter.id}')" title="مراجعة">
@@ -388,13 +388,13 @@ function renderLettersTableOptimized(allLetters) {
             <td>${letter.id}</td>
             <td>${letter.date}</td>
             <td>${translateLetterType(letter.type)}</td>
-            <td><span class="status-badge ${reviewStatusClass}">${letter.reviewStatus}</span></td>
-            <td><span class="status-badge ${sendStatusClass}">${letter.sendStatus}</span></td>
-            <td>${letter.recipient}</td>
-            <td>${letter.subject}</td>
-            <td>${letter.reviewerName || "-"}</td>
-            <td>${letter.reviewNotes || "-"}</td>
-            <td>${letter.writer || "-"}</td>
+            <td><span class="status-badge ${reviewStatusClass}">${displayStatusLabel(letter.reviewStatus)}</span></td>
+            <td><span class="status-badge ${sendStatusClass}">${displayStatusLabel(letter.sendStatus)}</span></td>
+            <td title="${letter.recipient || ''}">${truncateText(letter.recipient)}</td>
+            <td title="${letter.subject || ''}">${truncateText(letter.subject)}</td>
+            <td title="${letter.reviewerName || ''}">${truncateText(letter.reviewerName)}</td>
+            <td title="${letter.reviewNotes || ''}">${truncateText(letter.reviewNotes)}</td>
+            <td title="${letter.writer || ''}">${truncateText(letter.writer)}</td>
             <td>
                 <div class="action-buttons">
                     <button class="action-icon" onclick="reviewLetter('${letter.id}')" title="مراجعة">
@@ -419,9 +419,9 @@ function renderLettersTableOptimized(allLetters) {
     
     // Update pagination info
     updatePaginationInfo(allLetters.length);
-    
+
     console.timeEnd('renderLettersTable');
-    
+
     // Handle highlighting
     if (highlightId) {
         setTimeout(() => {
@@ -487,9 +487,12 @@ function filterAndRenderLetters(allLetters) {
         return matchesSearch && matchesType && matchesReview;
     });
     
-    // Apply sorting
+    // Apply sorting (default to newest first if no sort selected)
     if (selectedSort) {
         filtered = sortLetters(filtered, selectedSort);
+    } else {
+        // Default sorting: newest to oldest
+        filtered = sortLetters(filtered, 'date-new-old');
     }
     
     // Reset pagination for filtered results
@@ -719,30 +722,66 @@ async function loadSubmissionsData(forceRefresh = false) {
 }
 
 async function updateReviewStatusInSheet(letterId, status, reviewerName, notes, letterContent) {
-    try {
-        const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: new URLSearchParams({
-                action: 'updateReviewStatus',
-                letterId: letterId,
-                status: status,
-                reviewerName: reviewerName,
-                notes: notes,
-                letterContent: letterContent
-            })
-        });
+    const updateTimestamp = new Date().toISOString();
+    let retryCount = 0;
+    const maxRetries = 3;
 
-        // Invalidate cache after update
-        letterCache.invalidate();
-        
-        console.log('Request to update review status sent to Apps Script.');
-    } catch (error) {
-        console.error('Error sending update review status request to Apps Script:', error);
-        throw error;
+    console.log('📡 updateReviewStatusInSheet called');
+    console.log('Parameters being sent to Google Sheets:');
+    console.log('  - letterId:', letterId);
+    console.log('  - status:', status);
+    console.log('  - reviewerName:', reviewerName);
+    console.log('  - notes:', notes ? `${notes.length} chars` : 'empty');
+    console.log('  - letterContent:', letterContent ? `${letterContent.length} chars` : 'empty');
+
+    while (retryCount < maxRetries) {
+        try {
+            console.log(`📤 Attempt ${retryCount + 1}/${maxRetries} - Sending request to Apps Script...`);
+
+            const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    action: 'updateReviewStatus',
+                    letterId: letterId,
+                    status: status,
+                    reviewerName: reviewerName,
+                    notes: notes,
+                    letterContent: letterContent,
+                    timestamp: updateTimestamp
+                })
+            });
+
+            console.log('✅ Request sent successfully (no-cors mode)');
+
+            // Invalidate cache after update
+            letterCache.invalidate();
+            console.log('🗑️ Cache invalidated');
+
+            // Wait a moment for Google Sheets to update
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            console.log('✅ Status update request completed successfully');
+            return true;
+
+        } catch (error) {
+            retryCount++;
+            console.error(`❌ Attempt ${retryCount} failed:`, error);
+
+            if (retryCount >= maxRetries) {
+                console.error('❌ All retry attempts exhausted');
+                console.error('Error details:', error);
+                throw error;
+            }
+
+            // Wait before retrying (exponential backoff)
+            const waitTime = Math.pow(2, retryCount) * 1000;
+            console.log(`⏳ Waiting ${waitTime}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
     }
 }
 
@@ -780,6 +819,27 @@ function getStatusClass(status) {
         'تم الإرسال': 'status-ready'
     };
     return statusMap[status] || 'status-waiting';
+}
+
+// Display label for status (UI only - backend keeps original values)
+function displayStatusLabel(status) {
+    if (status === 'مرفوض') {
+        return 'طلب ملغى';
+    }
+    return status;
+}
+
+// Truncate text to specified length (default 50 characters)
+function truncateText(text, maxLength = 50) {
+    if (!text || text === "-" || text.trim() === "") {
+        return "-";
+    }
+
+    if (text.length <= maxLength) {
+        return text;
+    }
+
+    return text.substring(0, maxLength) + "...";
 }
 
 function translateLetterType(type) {
@@ -1040,11 +1100,33 @@ document.addEventListener('DOMContentLoaded', async () => {
             const recipientTitleSelect = document.getElementById('recipientTitle');
             if (recipientTitleSelect) {
                 settings.recipientTitles.forEach(title => {
-                    const option = document.createElement('option');
-                    option.value = title;
-                    option.textContent = title;
-                    recipientTitleSelect.appendChild(option);
+                    // Keep 'السادة' as-is (no gender variants)
+                    if (title === 'السادة') {
+                        const option = document.createElement('option');
+                        option.value = title;
+                        option.textContent = title;
+                        recipientTitleSelect.appendChild(option);
+                    }
+                    // Skip 'أخرى' here (we add it at the end)
+                    else if (title === 'أخرى') {
+                        return;
+                    }
+                    // For all other titles, add gender-specific options
+                    else {
+                        // Add male option
+                        const maleOption = document.createElement('option');
+                        maleOption.value = `${title} - ذكر`;
+                        maleOption.textContent = `${title} - ذكر`;
+                        recipientTitleSelect.appendChild(maleOption);
+
+                        // Add female option
+                        const femaleOption = document.createElement('option');
+                        femaleOption.value = `${title} - أنثى`;
+                        femaleOption.textContent = `${title} - أنثى`;
+                        recipientTitleSelect.appendChild(femaleOption);
+                    }
                 });
+                // Add 'أخرى' option at the end
                 const otherOption = document.createElement('option');
                 otherOption.value = 'أخرى';
                 otherOption.textContent = 'أخرى';

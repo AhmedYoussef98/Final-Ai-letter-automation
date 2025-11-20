@@ -2536,3 +2536,20 @@ body.dark-mode .nav-link.admin-link {
 body.dark-mode .nav-link.admin-link:hover {
     background: #008f47;
 }
+
+/* ==============================================
+   TABLE TEXT TRUNCATION STYLES
+   ============================================== */
+
+/* Ensure all table cells are properly sized and truncated text shows on hover */
+.letters-table td {
+    max-width: 250px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Show full text on hover using title attribute */
+.letters-table td[title]:hover {
+    cursor: help;
+}

@@ -856,14 +856,27 @@ function displayLetterError() {
 // Replace the existing updateReviewStatus function in main.js with this updated version
 
 async function updateReviewStatus(status) {
-    console.log('📝 Updating review status to:', status);
-    
+    const timestamp = new Date().toISOString();
+    console.log('═══════════════════════════════════════════════');
+    console.log('📝 STATUS UPDATE INITIATED');
+    console.log('Timestamp:', timestamp);
+    console.log('Requested Status:', status);
+    console.log('═══════════════════════════════════════════════');
+
     const reviewerName = document.getElementById('reviewerName')?.value;
     const notes = document.getElementById('reviewNotes')?.value;
     const letterId = document.getElementById('letterSelect')?.value;
     const letterContent = document.getElementById('letterContentReview')?.value;
-    
+
+    // Validation with detailed logging
+    console.log('📋 Validation Check:');
+    console.log('  - Letter ID:', letterId || '❌ MISSING');
+    console.log('  - Reviewer Name:', reviewerName || '❌ MISSING');
+    console.log('  - Notes Length:', notes ? notes.length : 0, 'characters');
+    console.log('  - Content Length:', letterContent ? letterContent.length : 0, 'characters');
+
     if (!reviewerName) {
+        console.error('❌ Validation Failed: Missing reviewer name');
         if (typeof notify !== 'undefined') {
             notify.warning('الرجاء إدخال اسم المراجع');
         } else {
@@ -871,8 +884,9 @@ async function updateReviewStatus(status) {
         }
         return;
     }
-    
+
     if (!letterId) {
+        console.error('❌ Validation Failed: Missing letter ID');
         if (typeof notify !== 'undefined') {
             notify.warning('الرجاء اختيار خطاب للمراجعة');
         } else {
@@ -880,39 +894,71 @@ async function updateReviewStatus(status) {
         }
         return;
     }
-    
+
+    console.log('✅ Validation Passed');
+
     try {
         // Show loading state
-        const activeButton = document.querySelector('.action-button:focus') || 
+        const activeButton = document.querySelector('.action-button:focus') ||
                            document.querySelector(`.action-button.${status.includes('جاهز') ? 'ready' : status.includes('تحسينات') ? 'needs-improvement' : 'rejected'}`);
-        
+
         let originalText = '';
         if (activeButton) {
             originalText = activeButton.innerHTML;
             activeButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
             activeButton.disabled = true;
         }
-        
+
+        // Create audit trail entry
+        const auditEntry = {
+            timestamp: timestamp,
+            letterId: letterId,
+            status: status,
+            reviewerName: reviewerName,
+            notesLength: notes ? notes.length : 0,
+            action: 'STATUS_UPDATE_INITIATED'
+        };
+
+        console.log('💾 Creating audit trail entry:', auditEntry);
+
+        // Store in localStorage for audit trail
+        const auditLog = JSON.parse(localStorage.getItem('statusUpdateAuditLog') || '[]');
+        auditLog.push(auditEntry);
+        // Keep only last 50 entries
+        if (auditLog.length > 50) auditLog.shift();
+        localStorage.setItem('statusUpdateAuditLog', JSON.stringify(auditLog));
+
         // Check if status is "جاهز للإرسال" (Ready to Send)
         if (status === 'جاهز للإرسال') {
-            console.log('📤 Sending letter to archive endpoint...');
-            
+            console.log('📤 Status is "Ready to Send" - Calling archive endpoint...');
+
             // Call the archive update endpoint
             try {
                 await updateArchiveLetter(letterId, letterContent);
-                
+                console.log('✅ Archive endpoint call successful');
+
                 if (typeof notify !== 'undefined') {
                     notify.success('تم إرسال الخطاب إلى الأرشيف بنجاح');
                 }
             } catch (archiveError) {
-                console.error('Archive update failed:', archiveError);
-                
+                console.error('❌ Archive update failed:', archiveError);
+
+                // Log archive failure
+                auditLog.push({
+                    timestamp: new Date().toISOString(),
+                    letterId: letterId,
+                    status: status,
+                    action: 'ARCHIVE_FAILED',
+                    error: archiveError.message
+                });
+                localStorage.setItem('statusUpdateAuditLog', JSON.stringify(auditLog));
+
                 if (typeof notify !== 'undefined') {
                     notify.error('حدث خطأ أثناء إرسال الخطاب إلى الأرشيف');
                 } else {
                     alert('حدث خطأ أثناء إرسال الخطاب إلى الأرشيف');
                 }
-                
+
                 // Restore button state
                 if (activeButton) {
                     activeButton.innerHTML = originalText;
@@ -921,31 +967,78 @@ async function updateReviewStatus(status) {
                 return;
             }
         }
-        
+
+        console.log('📤 Sending status update to Google Sheets...');
+        console.log('Parameters:');
+        console.log('  - letterId:', letterId);
+        console.log('  - status:', status);
+        console.log('  - reviewerName:', reviewerName);
+        console.log('  - notes:', notes ? `${notes.substring(0, 50)}...` : '(empty)');
+
         // Update the status in Google Sheets (for all statuses)
         await updateReviewStatusInSheet(letterId, status, reviewerName, notes, letterContent);
-        
+
+        console.log('✅ Status update request sent successfully');
+
+        // Log successful update
+        auditLog.push({
+            timestamp: new Date().toISOString(),
+            letterId: letterId,
+            status: status,
+            reviewerName: reviewerName,
+            action: 'STATUS_UPDATE_COMPLETED'
+        });
+        localStorage.setItem('statusUpdateAuditLog', JSON.stringify(auditLog));
+
+        // Store the expected status for verification
+        localStorage.setItem(`expectedStatus_${letterId}`, JSON.stringify({
+            status: status,
+            timestamp: timestamp,
+            reviewerName: reviewerName
+        }));
+
+        console.log('💾 Stored expected status for verification');
+        console.log('═══════════════════════════════════════════════');
+        console.log('✅ STATUS UPDATE PROCESS COMPLETED SUCCESSFULLY');
+        console.log('═══════════════════════════════════════════════');
+
         // Show success message
         if (typeof notify !== 'undefined') {
             notify.success(`تم تحديث حالة المراجعة إلى: ${status}`);
         } else {
             showSuccessMessage(`تم تحديث حالة المراجعة إلى: ${status}`);
         }
-        
+
         // Redirect to letter history with highlight
         setTimeout(() => {
             window.location.href = `letter-history.html?highlight=${letterId}`;
         }, 1500);
-        
+
     } catch (error) {
-        console.error('Error updating review status:', error);
-        
+        console.error('═══════════════════════════════════════════════');
+        console.error('❌ STATUS UPDATE FAILED');
+        console.error('Error:', error);
+        console.error('Stack:', error.stack);
+        console.error('═══════════════════════════════════════════════');
+
+        // Log error in audit trail
+        const auditLog = JSON.parse(localStorage.getItem('statusUpdateAuditLog') || '[]');
+        auditLog.push({
+            timestamp: new Date().toISOString(),
+            letterId: letterId,
+            status: status,
+            action: 'STATUS_UPDATE_FAILED',
+            error: error.message,
+            stack: error.stack
+        });
+        localStorage.setItem('statusUpdateAuditLog', JSON.stringify(auditLog));
+
         if (typeof notify !== 'undefined') {
             notify.error('حدث خطأ أثناء تحديث حالة المراجعة');
         } else {
             alert('حدث خطأ أثناء تحديث حالة المراجعة');
         }
-        
+
         // Restore button state
         if (activeButton) {
             activeButton.innerHTML = originalText;
