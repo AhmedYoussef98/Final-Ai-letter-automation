@@ -183,7 +183,7 @@ function displayLetters(letters) {
                 </span>
             `;
         } else {
-            whatsappStatusHTML = '<span style="color: var(--text-light); opacity: 0.7;">لم يتم الإرسال</span>';
+            whatsappStatusHTML = '<span class="no-whatsapp-status" style="color: var(--text-light); opacity: 0.7;">لم يتم الإرسال</span>';
         }
 
         row.innerHTML = `
@@ -197,7 +197,7 @@ function displayLetters(letters) {
             <td>
                 <button class="btn-send-whatsapp" data-letter-id="${letter.id}">
                     <i class="fab fa-whatsapp"></i>
-                    إرسال عبر واتساب
+                    طلب الحصول على الموافقة
                 </button>
             </td>
         `;

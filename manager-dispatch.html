@@ -7,7 +7,7 @@
     <script src="auth-guard.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إرسال الخطابات للمدراء - AI Letter Generator</title>
+    <title>طلب الموافقة - AI Letter Generator</title>
     <link rel="icon" href="logo.png" type="image/png">
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -287,25 +287,10 @@
             margin: 0;
         }
 
-        /* Info Banner */
-        .info-banner {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 1.5rem;
-            border-radius: 8px;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .info-banner i {
-            font-size: 1.5rem;
-        }
-
-        .info-banner p {
-            margin: 0;
-            line-height: 1.6;
+        /* Dark mode fix for unsent status */
+        body.dark-mode .no-whatsapp-status {
+            color: white !important;
+            opacity: 1;
         }
 
         /* Send Button in Table */
@@ -381,7 +366,7 @@
                 </a></li>
                 <li><a href="manager-dispatch.html" class="nav-link active">
                     <i class="fab fa-whatsapp"></i>
-                    إرسال للمدراء
+                    طلب الموافقة
                 </a></li>
             </ul>
             <button class="theme-toggle" id="themeToggle">
@@ -393,19 +378,11 @@
 
     <main class="main-container">
         <div class="page-header">
-            <h1>إرسال الخطابات للمدراء عبر واتساب</h1>
+            <h1>طلب الموافقة</h1>
             <p style="color: var(--text-light); margin-top: 0.5rem; font-size: 0.9rem;">
                 <i class="fas fa-info-circle"></i>
                 إرسال الخطابات الجاهزة للإرسال إلى المدراء للموافقة النهائية
             </p>
-        </div>
-
-        <div class="info-banner">
-            <i class="fab fa-whatsapp"></i>
-            <div>
-                <p><strong>كيفية الاستخدام:</strong></p>
-                <p>هذه الصفحة تعرض فقط الخطابات ذات الحالة "جاهز للإرسال". اختر خطاباً واضغط على زر "إرسال عبر واتساب" لاختيار المدير المناسب لإرساله.</p>
-            </div>
         </div>
 
         <div class="filters-section">
@@ -477,7 +454,7 @@
                 <button class="btn-cancel" id="cancelSend">إلغاء</button>
                 <button class="btn-send" id="confirmSend" disabled>
                     <i class="fab fa-whatsapp"></i>
-                    إرسال عبر واتساب
+                    طلب الحصول على الموافقة
                 </button>
             </div>
         </div>
@@ -487,7 +464,7 @@
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-content">
             <i class="fas fa-spinner fa-spin"></i>
-            <p>جاري الإرسال عبر واتساب...</p>
+            <p>جاري طلب الموافقة...</p>
         </div>
     </div>
 

@@ -8,6 +8,9 @@
     },
     "api/apps-script-proxy.js": {
       "maxDuration": 30
+    },
+    "api/whatsapp-proxy.js": {
+      "maxDuration": 30
     }
   }
 }
