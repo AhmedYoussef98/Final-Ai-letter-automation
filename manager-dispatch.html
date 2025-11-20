@@ -366,10 +366,59 @@
             color: #ffffff;
         }
 
-        /* Dark mode fix for unsent status */
-        body.dark-mode .no-whatsapp-status {
-            color: white !important;
-            opacity: 1;
+        /* Status Badge Styling */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .status-badge i {
+            font-size: 0.95rem;
+        }
+
+        /* Sent for Review - Orange/Yellow (awaiting manager) */
+        .status-sent-for-review {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        body.dark-mode .status-sent-for-review {
+            background: #7a6a2e;
+            color: #ffeaa7;
+            border-color: #6a5a1e;
+        }
+
+        /* Sent - Green (completed) */
+        .status-sent {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        body.dark-mode .status-sent {
+            background: #1e4620;
+            color: #d4edda;
+            border-color: #2a5f2e;
+        }
+
+        /* Pending - Gray (not sent) */
+        .status-pending {
+            background: #e9ecef;
+            color: #6c757d;
+            border: 1px solid #dee2e6;
+        }
+
+        body.dark-mode .status-pending {
+            background: #3a3a3a;
+            color: #cccccc;
+            border-color: #4a4a4a;
         }
 
         /* Send Button in Table */
@@ -398,31 +447,6 @@
 
         .btn-send-whatsapp i {
             font-size: 1.1rem;
-        }
-
-        /* WhatsApp Status Badge */
-        .whatsapp-status {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            padding: 0.3rem 0.6rem;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .whatsapp-status.sent {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        body.dark-mode .whatsapp-status.sent {
-            background: #1e4620;
-            color: #d4edda;
-        }
-
-        .whatsapp-status i {
-            font-size: 0.9rem;
         }
     </style>
 </head>
@@ -490,7 +514,7 @@
                         <th>المستلم</th>
                         <th>الموضوع</th>
                         <th>الكاتب</th>
-                        <th>حالة واتساب</th>
+                        <th>حالة الإرسال</th>
                         <th>الإجراءات</th>
                     </tr>
                 </thead>

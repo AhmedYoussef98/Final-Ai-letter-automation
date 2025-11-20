@@ -123,8 +123,7 @@ async function loadReadyLetters() {
             sendStatus: row[10] || 'في الانتظار',
             reviewerName: row[12] || '',
             reviewNotes: row[13] || '',
-            writer: row[14] || '',
-            whatsappStatus: row[15] || '' // WhatsApp status column
+            writer: row[14] || ''
         }));
 
         // Filter only "Ready to Send" letters
@@ -173,17 +172,24 @@ function displayLetters(letters) {
             return text.length > length ? text.substring(0, length) + '...' : text;
         };
 
-        // WhatsApp status display
-        let whatsappStatusHTML = '';
-        if (letter.whatsappStatus) {
-            whatsappStatusHTML = `
-                <span class="whatsapp-status sent">
-                    <i class="fab fa-whatsapp"></i>
-                    ${truncate(letter.whatsappStatus, 30)}
-                </span>
-            `;
-        } else {
-            whatsappStatusHTML = '<span class="no-whatsapp-status" style="color: var(--text-light); opacity: 0.7;">لم يتم الإرسال</span>';
+        // Send status display with styling
+        let sendStatusHTML = '';
+        let statusClass = '';
+
+        switch(letter.sendStatus) {
+            case 'تم الإرسال للمراجعة':
+                statusClass = 'status-sent-for-review';
+                sendStatusHTML = `<span class="status-badge ${statusClass}"><i class="fab fa-whatsapp"></i> ${letter.sendStatus}</span>`;
+                break;
+            case 'تم الإرسال':
+                statusClass = 'status-sent';
+                sendStatusHTML = `<span class="status-badge ${statusClass}"><i class="fas fa-check-circle"></i> ${letter.sendStatus}</span>`;
+                break;
+            case 'في الانتظار':
+            default:
+                statusClass = 'status-pending';
+                sendStatusHTML = `<span class="status-badge ${statusClass}"><i class="fas fa-clock"></i> ${letter.sendStatus}</span>`;
+                break;
         }
 
         row.innerHTML = `
@@ -193,7 +199,7 @@ function displayLetters(letters) {
             <td>${truncate(letter.recipient)}</td>
             <td>${truncate(letter.subject)}</td>
             <td>${letter.writer}</td>
-            <td>${whatsappStatusHTML}</td>
+            <td>${sendStatusHTML}</td>
             <td>
                 <button class="btn-send-whatsapp" data-letter-id="${letter.id}">
                     <i class="fab fa-whatsapp"></i>
@@ -371,25 +377,26 @@ function handleSendToManager() {
     );
 }
 
-// Update WhatsApp status in Google Sheets
+// Update Send Status in Google Sheets when sent for approval
 async function updateWhatsAppStatus(letterId, managerName, managerPhone) {
     try {
         const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzUPSTsNajKH8ffg1fT4Wri9T-63eJYn4_zquPAkdPLF7c5g4nr89IXvbbFhyWEce9T/exec';
 
-        const whatsappStatus = `تم الإرسال إلى ${managerName} للمراجعة`;
+        // Update Send Status to "Sent for Review"
+        const sendStatus = 'تم الإرسال للمراجعة';
         const timestamp = new Date().toISOString();
 
         const formData = new FormData();
         formData.append('action', 'updateWhatsAppStatus');
         formData.append('letterId', letterId);
-        formData.append('whatsappStatus', whatsappStatus);
+        formData.append('whatsappStatus', sendStatus);
         formData.append('managerName', managerName);
         formData.append('managerPhone', managerPhone);
         formData.append('timestamp', timestamp);
 
-        console.log('📝 Updating WhatsApp status in Google Sheets...', {
+        console.log('📝 Updating Send Status in Google Sheets...', {
             letterId,
-            whatsappStatus,
+            sendStatus,
             managerName
         });
 

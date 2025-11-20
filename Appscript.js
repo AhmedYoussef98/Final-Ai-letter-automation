@@ -832,7 +832,7 @@ function updateReviewStatusInSheet(letterId, status, reviewerName, notes, letter
 }
 
 /**
- * Updates WhatsApp status in the sheet.
+ * Updates Send Status in the sheet when sent for WhatsApp approval.
  */
 function updateWhatsAppStatusInSheet(letterId, whatsappStatus, managerName, managerPhone) {
     const sheet = SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName('Submissions');
@@ -857,10 +857,10 @@ function updateWhatsAppStatusInSheet(letterId, whatsappStatus, managerName, mana
 
     const targetRow = rowIndex + 1;
 
-    // Update WhatsApp status (column P - index 16)
-    sheet.getRange(targetRow, 16).setValue(whatsappStatus);
+    // Update Send Status (column K - index 11) instead of separate WhatsApp column
+    sheet.getRange(targetRow, 11).setValue(whatsappStatus);
 
-    Logger.log('Updated WhatsApp status for letter ID: ' + letterId + ' to: ' + whatsappStatus);
+    Logger.log('Updated Send Status for letter ID: ' + letterId + ' to: ' + whatsappStatus);
     Logger.log('Manager: ' + managerName + ' (' + managerPhone + ')');
 
     SpreadsheetApp.flush();
