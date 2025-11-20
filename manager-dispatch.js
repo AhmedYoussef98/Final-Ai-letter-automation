@@ -294,7 +294,7 @@ function setupEventListeners() {
 }
 
 // Handle sending letter to manager
-async function handleSendToManager() {
+function handleSendToManager() {
     if (!selectedLetter || !managerSelect.value) {
         return;
     }
@@ -302,68 +302,73 @@ async function handleSendToManager() {
     const managerPhone = managerSelect.value;
     const managerName = managerSelect.options[managerSelect.selectedIndex].dataset.name;
 
-    // Show confirmation
-    const confirmed = await notify.confirm(
-        `هل أنت متأكد من إرسال الخطاب "${selectedLetter.id}" إلى المدير ${managerName} عبر واتساب؟`,
-        'تأكيد الإرسال'
-    );
+    // Store letter info before closing modal (important!)
+    const letterId = selectedLetter.id;
 
-    if (!confirmed) {
-        return;
-    }
+    // Show confirmation using callback style
+    notify.confirm(
+        `هل أنت متأكد من إرسال الخطاب "${letterId}" إلى المدير ${managerName} عبر واتساب؟`,
+        async () => {
+            // User confirmed - proceed with sending
 
-    // Close modal and show loading
-    closeManagerModal();
-    loadingOverlay.classList.add('active');
+            // Close modal and show loading
+            closeManagerModal();
+            loadingOverlay.classList.add('active');
 
-    try {
-        console.log('📤 Sending letter to WhatsApp...', {
-            letter_id: selectedLetter.id,
-            phone_number: managerPhone,
-            manager_name: managerName
-        });
+            try {
+                console.log('📤 Sending letter to WhatsApp...', {
+                    letter_id: letterId,
+                    phone_number: managerPhone,
+                    manager_name: managerName
+                });
 
-        // Send to WhatsApp API
-        const response = await fetch(WHATSAPP_PROXY_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                phone_number: managerPhone,
-                letter_id: selectedLetter.id
-            })
-        });
+                // Send to WhatsApp API
+                const response = await fetch(WHATSAPP_PROXY_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phone_number: managerPhone,
+                        letter_id: letterId
+                    })
+                });
 
-        const data = await response.json();
+                const data = await response.json();
 
-        if (response.ok) {
-            // Success
-            console.log('✅ Letter sent successfully:', data);
+                if (response.ok) {
+                    // Success
+                    console.log('✅ Letter sent successfully:', data);
 
-            // Update Google Sheets with WhatsApp status
-            await updateWhatsAppStatus(selectedLetter.id, managerName, managerPhone);
+                    // Update Google Sheets with WhatsApp status
+                    await updateWhatsAppStatus(letterId, managerName, managerPhone);
 
-            // Show success message
-            notify.success(`تم إرسال الخطاب بنجاح إلى ${managerName} عبر واتساب`);
+                    // Show success message
+                    notify.success(`تم إرسال الخطاب بنجاح إلى ${managerName} عبر واتساب`);
 
-            // Reload letters to show updated status
-            await loadReadyLetters();
+                    // Reload letters to show updated status
+                    await loadReadyLetters();
 
-        } else if (response.status === 409) {
-            // Phone already assigned error
-            console.warn('⚠️ Phone already assigned:', data);
-            notify.warning(data.message || 'هذا الرقم مشغول حالياً بخطاب آخر');
-        } else {
-            throw new Error(data.message || 'Failed to send letter');
+                } else if (response.status === 409) {
+                    // Phone already assigned error
+                    console.warn('⚠️ Phone already assigned:', data);
+                    notify.warning(data.message || 'هذا الرقم مشغول حالياً بخطاب آخر');
+                } else {
+                    throw new Error(data.message || 'Failed to send letter');
+                }
+
+            } catch (error) {
+                console.error('❌ Error sending letter:', error);
+                notify.error('فشل إرسال الخطاب. يرجى المحاولة مرة أخرى.');
+            } finally {
+                loadingOverlay.classList.remove('active');
+            }
+        },
+        () => {
+            // User cancelled - do nothing
+            console.log('❌ User cancelled send');
         }
-
-    } catch (error) {
-        console.error('❌ Error sending letter:', error);
-        notify.error('فشل إرسال الخطاب. يرجى المحاولة مرة أخرى.');
-    } finally {
-        loadingOverlay.classList.remove('active');
-    }
+    );
 }
 
 // Update WhatsApp status in Google Sheets
