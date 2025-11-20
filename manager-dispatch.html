@@ -62,7 +62,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(4px);
             z-index: 10000;
             align-items: center;
             justify-content: center;
@@ -73,20 +74,23 @@
         }
 
         .modal-content {
-            background: var(--card-bg);
-            border-radius: 12px;
+            background: #ffffff;
+            border-radius: 16px;
             padding: 2rem;
-            max-width: 500px;
+            max-width: 550px;
             width: 90%;
-            max-height: 90vh;
+            max-height: 85vh;
             overflow-y: auto;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             position: relative;
             animation: modalSlideIn 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         body.dark-mode .modal-content {
-            background: var(--card-bg-dark);
+            background: #2a2a2a;
+            border: 1px solid #444444;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
         }
 
         @keyframes modalSlideIn {
@@ -106,27 +110,33 @@
             align-items: center;
             margin-bottom: 1.5rem;
             padding-bottom: 1rem;
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        body.dark-mode .modal-header {
+            border-bottom-color: #444444;
         }
 
         .modal-header h2 {
             margin: 0;
-            color: var(--text-light);
+            color: #333333;
+            font-size: 1.5rem;
+            font-weight: 700;
         }
 
         body.dark-mode .modal-header h2 {
-            color: var(--text-dark);
+            color: #ffffff;
         }
 
         .modal-close {
-            background: none;
+            background: #f5f5f5;
             border: none;
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             cursor: pointer;
-            color: var(--text-light);
+            color: #666666;
             padding: 0;
-            width: 30px;
-            height: 30px;
+            width: 36px;
+            height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -134,33 +144,45 @@
             transition: all 0.3s;
         }
 
+        body.dark-mode .modal-close {
+            background: #3a3a3a;
+            color: #cccccc;
+        }
+
         .modal-close:hover {
-            background: var(--danger);
+            background: #dc3545;
             color: white;
+            transform: rotate(90deg);
         }
 
         .letter-details {
-            background: var(--bg-light);
-            padding: 1rem;
-            border-radius: 8px;
+            background: #f5f7fa;
+            padding: 1.25rem;
+            border-radius: 10px;
             margin-bottom: 1.5rem;
+            border: 1px solid #e0e0e0;
         }
 
         body.dark-mode .letter-details {
-            background: var(--bg-dark);
+            background: #1a1a1a;
+            border-color: #444444;
         }
 
         .letter-details p {
-            margin: 0.5rem 0;
-            color: var(--text-light);
+            margin: 0.75rem 0;
+            color: #333333;
+            font-size: 0.95rem;
+            line-height: 1.6;
         }
 
         body.dark-mode .letter-details p {
-            color: var(--text-dark);
+            color: #ffffff;
         }
 
         .letter-details strong {
-            color: var(--primary-color);
+            color: #00a651;
+            font-weight: 600;
+            margin-left: 0.5rem;
         }
 
         .form-group {
@@ -169,36 +191,48 @@
 
         .form-group label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             font-weight: 600;
-            color: var(--text-light);
+            color: #333333;
+            font-size: 1rem;
         }
 
         body.dark-mode .form-group label {
-            color: var(--text-dark);
+            color: #ffffff;
+        }
+
+        .form-group label i {
+            margin-left: 0.5rem;
+            color: #25D366;
         }
 
         .form-group select {
             width: 100%;
-            padding: 0.75rem;
-            border: 2px solid var(--border-color);
-            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             font-size: 1rem;
             font-family: 'Cairo', sans-serif;
-            background: var(--card-bg);
-            color: var(--text-light);
+            background: #ffffff;
+            color: #333333;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         body.dark-mode .form-group select {
-            background: var(--input-bg-dark);
-            color: var(--text-dark);
-            border-color: var(--border-color-dark);
+            background: #1a1a1a;
+            color: #ffffff;
+            border-color: #444444;
         }
 
         .form-group select:focus {
             outline: none;
-            border-color: var(--primary-color);
+            border-color: #00a651;
+            box-shadow: 0 0 0 3px rgba(0, 166, 81, 0.1);
+        }
+
+        body.dark-mode .form-group select:focus {
+            box-shadow: 0 0 0 3px rgba(0, 166, 81, 0.2);
         }
 
         .manager-option {
@@ -209,48 +243,78 @@
             display: flex;
             gap: 1rem;
             justify-content: flex-end;
-            margin-top: 1.5rem;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        body.dark-mode .modal-actions {
+            border-top-color: #444444;
         }
 
         .btn-cancel {
-            padding: 0.75rem 1.5rem;
-            border: 2px solid var(--border-color);
-            background: transparent;
-            color: var(--text-light);
-            border-radius: 8px;
+            padding: 0.875rem 1.75rem;
+            border: 2px solid #e0e0e0;
+            background: #f5f5f5;
+            color: #666666;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 1rem;
             font-family: 'Cairo', sans-serif;
             font-weight: 600;
             transition: all 0.3s;
+        }
+
+        body.dark-mode .btn-cancel {
+            background: #3a3a3a;
+            border-color: #444444;
+            color: #cccccc;
         }
 
         .btn-cancel:hover {
-            background: var(--border-color);
+            background: #e0e0e0;
+            border-color: #cccccc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark-mode .btn-cancel:hover {
+            background: #4a4a4a;
+            border-color: #555555;
         }
 
         .btn-send {
-            padding: 0.75rem 1.5rem;
+            padding: 0.875rem 1.75rem;
             border: none;
-            background: var(--primary-color);
+            background: linear-gradient(135deg, #00a651 0%, #008f45 100%);
             color: white;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
             font-size: 1rem;
             font-family: 'Cairo', sans-serif;
             font-weight: 600;
             transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(0, 166, 81, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .btn-send:hover {
-            background: var(--primary-hover);
+            background: linear-gradient(135deg, #008f45 0%, #007a3d 100%);
             transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 166, 81, 0.4);
         }
 
         .btn-send:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
+        }
+
+        .btn-send i {
+            font-size: 1.1rem;
         }
 
         /* Loading Overlay */
@@ -261,7 +325,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(4px);
             z-index: 10001;
             align-items: center;
             justify-content: center;
@@ -273,18 +338,32 @@
 
         .loading-content {
             text-align: center;
-            color: white;
+            background: #ffffff;
+            padding: 3rem 4rem;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        body.dark-mode .loading-content {
+            background: #2a2a2a;
         }
 
         .loading-content i {
-            font-size: 4rem;
-            margin-bottom: 1rem;
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: #00a651;
             animation: spin 1s linear infinite;
         }
 
         .loading-content p {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             margin: 0;
+            color: #333333;
+            font-weight: 600;
+        }
+
+        body.dark-mode .loading-content p {
+            color: #ffffff;
         }
 
         /* Dark mode fix for unsent status */
@@ -295,11 +374,11 @@
 
         /* Send Button in Table */
         .btn-send-whatsapp {
-            background: #25D366;
+            background: linear-gradient(135deg, #25D366 0%, #1fb855 100%);
             color: white;
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            padding: 0.625rem 1.25rem;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 0.9rem;
             font-weight: 600;
@@ -307,15 +386,18 @@
             align-items: center;
             gap: 0.5rem;
             transition: all 0.3s;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(37, 211, 102, 0.3);
         }
 
         .btn-send-whatsapp:hover {
-            background: #1fb855;
+            background: linear-gradient(135deg, #1fb855 0%, #18a048 100%);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
         }
 
         .btn-send-whatsapp i {
-            font-size: 1rem;
+            font-size: 1.1rem;
         }
 
         /* WhatsApp Status Badge */
@@ -454,7 +536,7 @@
                 <button class="btn-cancel" id="cancelSend">إلغاء</button>
                 <button class="btn-send" id="confirmSend" disabled>
                     <i class="fab fa-whatsapp"></i>
-                    طلب الحصول على الموافقة
+                    طلب الموافقة
                 </button>
             </div>
         </div>

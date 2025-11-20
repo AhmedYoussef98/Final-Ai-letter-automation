@@ -197,7 +197,7 @@ function displayLetters(letters) {
             <td>
                 <button class="btn-send-whatsapp" data-letter-id="${letter.id}">
                     <i class="fab fa-whatsapp"></i>
-                    طلب الحصول على الموافقة
+                    طلب الموافقة
                 </button>
             </td>
         `;
