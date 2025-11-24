@@ -2553,3 +2553,30 @@ body.dark-mode .nav-link.admin-link:hover {
 .letters-table td[title]:hover {
     cursor: help;
 }
+
+/* AI Suggestions Styling */
+.ai-suggestions {
+    background-color: rgba(102, 51, 153, 0.05);
+    border: 1px solid rgba(102, 51, 153, 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.ai-suggestions h5 {
+    color: #663399; /* RebeccaPurple */
+}
+
+body.dark-mode .ai-suggestions {
+    background-color: rgba(102, 51, 153, 0.15);
+    border-color: rgba(102, 51, 153, 0.4);
+}
+
+body.dark-mode .ai-suggestions h5 {
+    color: #9370db; /* MediumPurple */
+}
+
+.suggestion-text {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}

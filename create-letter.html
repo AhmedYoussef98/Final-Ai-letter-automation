@@ -589,6 +589,7 @@
             const checks = validationData.checks;
             const metrics = validationData.metrics;
             const suggestions = validationData.suggestions || [];
+            const aiSuggestions = validationData.ai_suggestions || '';
             
             let html = '';
             
@@ -638,8 +639,45 @@
             html += `</div>`;
             html += `</div></div>`;
             
-            // Suggestions
-            if (suggestions.length > 0) {
+            // AI Suggestions (New Feature)
+            if (aiSuggestions) {
+                html += `<div class="validation-suggestions ai-suggestions">`;
+                html += `<h5><i class="fas fa-robot"></i> اقتراحات الذكاء الاصطناعي:</h5>`;
+                
+                // Parse the AI suggestions string
+                const lines = aiSuggestions.split('\n');
+                let listHtml = '<ul>';
+                let hasList = false;
+                
+                lines.forEach(line => {
+                    const trimmedLine = line.trim();
+                    if (trimmedLine) {
+                        if (trimmedLine.startsWith('-') || trimmedLine.startsWith('•')) {
+                            // List item
+                            listHtml += `<li>${trimmedLine.substring(1).trim()}</li>`;
+                            hasList = true;
+                        } else {
+                            // Header or regular text
+                            if (hasList) {
+                                listHtml += '</ul>';
+                                hasList = false;
+                            }
+                            html += `<p class="suggestion-text">${trimmedLine}</p>`;
+                            listHtml = '<ul>'; // Reset for next potential list
+                        }
+                    }
+                });
+                
+                if (hasList) {
+                    listHtml += '</ul>';
+                    html += listHtml;
+                }
+                
+                html += `</div>`;
+            }
+            
+            // Regular Suggestions (Legacy/Fallback)
+            if (suggestions.length > 0 && !aiSuggestions) {
                 html += `<div class="validation-suggestions">`;
                 html += `<h5><i class="fas fa-lightbulb"></i> اقتراحات التحسين:</h5>`;
                 html += `<ul>`;
