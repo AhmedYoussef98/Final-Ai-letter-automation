@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <link rel="stylesheet" href="notifications.css">
     <link rel="stylesheet" href="mobile-styles.css">
@@ -50,8 +51,13 @@
         }
 
         @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         /* Modal Styles */
@@ -98,6 +104,7 @@
                 transform: translateY(-50px);
                 opacity: 0;
             }
+
             to {
                 transform: translateY(0);
                 opacity: 1;
@@ -450,6 +457,7 @@
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar">
         <div class="nav-container">
@@ -459,21 +467,21 @@
             </a>
             <ul class="nav-links">
                 <li><a href="create-letter.html" class="nav-link">
-                    <i class="fas fa-plus-circle"></i>
-                    إنشاء خطاب جديد
-                </a></li>
+                        <i class="fas fa-plus-circle"></i>
+                        إنشاء خطاب جديد
+                    </a></li>
                 <li><a href="letter-history.html" class="nav-link">
-                    <i class="fas fa-history"></i>
-                    سجل الخطابات
-                </a></li>
+                        <i class="fas fa-history"></i>
+                        سجل الخطابات
+                    </a></li>
                 <li><a href="review-letter.html" class="nav-link">
-                    <i class="fas fa-check-circle"></i>
-                    مراجعة خطاب
-                </a></li>
+                        <i class="fas fa-check-circle"></i>
+                        مراجعة خطاب
+                    </a></li>
                 <li><a href="manager-dispatch.html" class="nav-link active">
-                    <i class="fab fa-whatsapp"></i>
-                    طلب الموافقة
-                </a></li>
+                        <i class="fab fa-whatsapp"></i>
+                        طلب الموافقة
+                    </a></li>
             </ul>
             <button class="theme-toggle" id="themeToggle">
                 <i class="fas fa-moon"></i>
@@ -495,6 +503,16 @@
             <div class="search-box">
                 <i class="fas fa-search"></i>
                 <input type="text" id="searchInput" placeholder="ابحث عن المستلم أو الرقم المرجعي أو الكاتب">
+            </div>
+            <div class="filter-group">
+                <select id="statusFilter">
+                    <option value="all">كل الحالات</option>
+                    <option value="pending">في الانتظار</option>
+                    <option value="sent">تم الإرسال</option>
+                    <option value="approved">تمت الموافقة</option>
+                    <option value="rejected">مرفوض</option>
+                    <option value="modifications">تعديلات</option>
+                </select>
             </div>
         </div>
 
@@ -578,4 +596,5 @@
     <script src="main.js"></script>
     <script src="manager-dispatch.js"></script>
 </body>
+
 </html>

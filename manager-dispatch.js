@@ -175,22 +175,29 @@ function displayLetters(letters) {
         // Send status display with styling
         let sendStatusHTML = '';
         let statusClass = '';
+        let iconClass = '';
 
-        switch(letter.sendStatus) {
-            case 'تم الإرسال للمراجعة':
-                statusClass = 'status-sent-for-review';
-                sendStatusHTML = `<span class="status-badge ${statusClass}"><i class="fab fa-whatsapp"></i> ${letter.sendStatus}</span>`;
-                break;
-            case 'تم الإرسال':
-                statusClass = 'status-sent';
-                sendStatusHTML = `<span class="status-badge ${statusClass}"><i class="fas fa-check-circle"></i> ${letter.sendStatus}</span>`;
-                break;
-            case 'في الانتظار':
-            default:
-                statusClass = 'status-pending';
-                sendStatusHTML = `<span class="status-badge ${statusClass}"><i class="fas fa-clock"></i> ${letter.sendStatus}</span>`;
-                break;
+        // Normalize status for comparison
+        const status = letter.sendStatus.trim();
+
+        if (status === 'تم الإرسال للمراجعة' || status === 'تم الإرسال') {
+            statusClass = 'status-sent'; // Yellow
+            iconClass = 'fa-check-circle';
+        } else if (status === 'تمت الموافقة') {
+            statusClass = 'status-approved'; // Green
+            iconClass = 'fa-check-double';
+        } else if (status === 'مرفوض') {
+            statusClass = 'status-rejected'; // Red
+            iconClass = 'fa-times-circle';
+        } else if (status.includes('تعديلات')) {
+            statusClass = 'status-modifications'; // Orange
+            iconClass = 'fa-edit';
+        } else {
+            statusClass = 'status-pending'; // Gray
+            iconClass = 'fa-clock';
         }
+
+        sendStatusHTML = `<span class="status-badge ${statusClass}"><i class="fas ${iconClass}"></i> ${status}</span>`;
 
         row.innerHTML = `
             <td>${letter.id}</td>
@@ -260,24 +267,50 @@ function closeManagerModal() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Search functionality
-    searchInput.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase().trim();
+    const statusFilter = document.getElementById('statusFilter');
 
-        if (!searchTerm) {
-            displayLetters(allLetters);
-            return;
-        }
+    // Filter function
+    const filterLetters = () => {
+        const searchTerm = searchInput.value.toLowerCase().trim();
+        const statusValue = statusFilter.value;
 
-        const filtered = allLetters.filter(letter =>
-            letter.id.toLowerCase().includes(searchTerm) ||
-            letter.recipient.toLowerCase().includes(searchTerm) ||
-            letter.subject.toLowerCase().includes(searchTerm) ||
-            letter.writer.toLowerCase().includes(searchTerm)
-        );
+        const filtered = allLetters.filter(letter => {
+            // Text search
+            const matchesSearch = !searchTerm || 
+                letter.id.toLowerCase().includes(searchTerm) ||
+                letter.recipient.toLowerCase().includes(searchTerm) ||
+                letter.subject.toLowerCase().includes(searchTerm) ||
+                letter.writer.toLowerCase().includes(searchTerm);
+
+            // Status filter
+            let matchesStatus = true;
+            const status = letter.sendStatus.trim();
+
+            if (statusValue !== 'all') {
+                if (statusValue === 'pending') {
+                    matchesStatus = status === 'في الانتظار';
+                } else if (statusValue === 'sent') {
+                    matchesStatus = status === 'تم الإرسال للمراجعة' || status === 'تم الإرسال';
+                } else if (statusValue === 'approved') {
+                    matchesStatus = status === 'تمت الموافقة';
+                } else if (statusValue === 'rejected') {
+                    matchesStatus = status === 'مرفوض';
+                } else if (statusValue === 'modifications') {
+                    matchesStatus = status.includes('تعديلات');
+                }
+            }
+
+            return matchesSearch && matchesStatus;
+        });
 
         displayLetters(filtered);
-    });
+    };
+
+    // Search functionality
+    searchInput.addEventListener('input', filterLetters);
+
+    // Status filter functionality
+    statusFilter.addEventListener('change', filterLetters);
 
     // Modal close handlers
     closeModal.addEventListener('click', closeManagerModal);
