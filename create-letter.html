@@ -418,7 +418,7 @@
                             await validateAndDisplayResults(result.updated_letter);
                             
                             // Show success message
-                            let successMessage = 'تم تعديل الخطاب بنجاح!';
+                            let successMessage = 'جاري تعديل الخطاب';
                             if (result.response_text) {
                                 successMessage += `\n\nرد النظام: ${result.response_text}`;
                             }
@@ -426,7 +426,7 @@
                                 successMessage += `\n\nالتعديلات المُجراة: ${result.changes_made.join(', ')}`;
                             }
                             
-                            notify.success('تم تعديل الخطاب بنجاح!', 5000);
+                            notify.success('جاري تعديل الخطاب', 5000);
                         } else {
                             console.error('No updated letter in response:', result);
                             notify.error('حدث خطأ: لم يتم استلام الخطاب المعدّل من الخادم');
