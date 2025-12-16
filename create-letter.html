@@ -447,12 +447,16 @@
             if (saveButton) {
                 saveButton.addEventListener('click', async function() {
                     console.log('🔥 Save button clicked - starting save process');
-                    
+
+                    const loader = document.getElementById('loader');
+                    loader.classList.add('active');
+
                     try {
                         // Step 1: Get letter content and validate
                         const letterContent = document.getElementById('letterPreview').value;
                         if (!letterContent || letterContent.trim() === '') {
                             notify.warning('لا يوجد محتوى خطاب للحفظ. الرجاء إنشاء خطاب أولاً');
+                            loader.classList.remove('active');
                             return;
                         }
                         console.log('✅ Letter content validated:', letterContent.substring(0, 100) + '...');
@@ -464,11 +468,13 @@
                         
                         if (!letterTypeElement.value) {
                             notify.warning('الرجاء اختيار نوع الخطاب');
+                            loader.classList.remove('active');
                             return;
                         }
                         
                         if (!is_firstRadio) {
                             notify.warning('الرجاء تحديد ما إذا كانت هذه أول مراسلة');
+                            loader.classList.remove('active');
                             return;
                         }
                         
@@ -532,15 +538,18 @@
                             }, 2000);
                             
                             // Navigate to letter history
+                            loader.classList.remove('active');
                             window.location.href = `letter-history.html?highlight=${letterId}`;
                         } else {
                             console.error('❌ Archive failed - no result returned');
                             notify.error('فشل في حفظ الخطاب. الرجاء المحاولة مرة أخرى.');
+                            loader.classList.remove('active');
                         }
-                        
+
                     } catch (error) {
                         console.error('❌ Save process failed:', error);
                         notify.error('حدث خطأ أثناء حفظ الخطاب: ' + error.message);
+                        loader.classList.remove('active');
                     }
                 });
             } else {
