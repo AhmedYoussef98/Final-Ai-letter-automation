@@ -2,7 +2,7 @@
 const PROXY_URL = '/api/apps-script-proxy';
 
 // GOOGLE SIGN-IN DOMAIN FILTERING (Optional - set empty array to allow all domains)
-const ALLOWED_GOOGLE_DOMAINS = ['netzero.sa', 'yallasquad.com']; // Add your allowed domains here
+const ALLOWED_GOOGLE_DOMAINS = ['netzero.sa', 'yallasquad.com','onshobbak.com']; // Add your allowed domains here
 // Example: const ALLOWED_GOOGLE_DOMAINS = ['company.com', 'partner.com'];
 // To disable filtering: const ALLOWED_GOOGLE_DOMAINS = [];
 
