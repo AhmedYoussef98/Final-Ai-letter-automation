@@ -251,7 +251,7 @@ async function handleGoogleSignUp(response) {
         const payload = parseJwt(response.credential);
         console.log('User info from Google:', payload);
         
-        // STEP 1: Check domain (frontend validation)
+        // STEP 1: Check domain (front-end validation)
         const domainCheck = isEmailDomainAllowed(payload.email);
         if (!domainCheck.allowed) {
             notify.error(domainCheck.message);
